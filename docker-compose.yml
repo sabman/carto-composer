@@ -5,13 +5,14 @@ services:
     build: carto-nginx-docker
     ports:
       - 80:80
-    links:
-      - editor:editor
-      - sql-api:sql-api
-      - maps-api:maps-api
+    depends_on:
+      - editor
+      - sql-api
+      - maps-api
   db:
-    #build: carto-postgis-docker
-    image: codefornl/carto-postgis
+    build: carto-postgis-docker
+    # need to update cartodb extension
+    # image: codefornl/carto-postgis
     restart: always
     expose:
       - 5432
@@ -33,17 +34,19 @@ services:
   maps-api:
     build: carto-maps-api-docker
     #image: codefornl/carto-maps-api-docker
-    links:
-      - db:db
-      - redis:redis
+    depends_on:
+      - db
+      - redis
     expose:
       - 8181
   sql-api:
     build: carto-sql-api-docker
     #image: codefornl/carto-sql-api
-    links:
-      - db:db
-      - redis:redis
+    environment:
+      - POSTGRES_PASSWORD="password"
+    depends_on:
+      - db
+      - redis
     expose:
       - 8080
   editor:
@@ -51,11 +54,11 @@ services:
     #image: codefornl/carto-editor-docker
     environment:
       - BUNDLE_PATH=/bundle_cache
-    links:
-      - sql-api:sql-api
-      - maps-api:maps-api
-      - db:db
-      - redis:redis
+    depends_on:
+      - sql-api
+      - maps-api
+      - db
+      - redis
     volumes_from:
       - box
     expose:
